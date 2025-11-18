@@ -1,0 +1,34 @@
+
+text_col = 'productTitle'
+num_features = ['price','discount_percentage']  # add more numeric features if useful
+cat_features = ['tag_simplified'] if 'tag_simplified' in df.columns else []
+
+# Text pipeline: TF-IDF -> TruncatedSVD (to reduce to e.g., 50 components)
+text_pipeline = Pipeline([
+    ('tfidf', TfidfVectorizer(max_features=300, stop_words='english', ngram_range=(1,2))),
+    ('svd', TruncatedSVD(n_components=50, random_state=42))
+])
+
+num_pipeline = Pipeline([
+    ('scaler', StandardScaler())
+])
+
+# Categorical pipeline
+cat_pipeline = Pipeline([
+    ('onehot', OneHotEncoder(handle_unknown='ignore', sparse=False))
+])
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('txt', text_pipeline, text_col),
+        ('num', num_pipeline, num_features),
+        ('cat', cat_pipeline, cat_features)
+    ],
+    remainder='drop'
+)
+
+
+X = df[[text_col] + num_features + cat_features].copy()
+y = df['sold'].astype(float)  # target
+
+# y_log = np.log1p(y)   # if you want to model log(sold)
