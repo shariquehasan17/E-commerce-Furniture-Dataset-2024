@@ -1,0 +1,15 @@
+
+def evaluate(model, X_t, y_t, name="Model"):
+    y_pred = model.predict(X_t)
+    mse = mean_squared_error(y_t, y_pred)
+    mae = mean_absolute_error(y_t, y_pred)
+    r2 = r2_score(y_t, y_pred)
+    print(f"{name} -> MSE: {mse:.3f}, MAE: {mae:.3f}, R2: {r2:.3f}")
+    return y_pred
+
+y_pred_lr = evaluate(pipe_lr, X_test, y_test, "LinearRegression")
+y_pred_rf = evaluate(pipe_rf, X_test, y_test, "RandomForest")
+
+scores = cross_val_score(pipe_rf, X, y, scoring='r2', cv=5, n_jobs=-1)
+print("RandomForest CV R2 (5-fold):", scores, "mean:", scores.mean())
+
