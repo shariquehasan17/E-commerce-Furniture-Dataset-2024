@@ -1,0 +1,32 @@
+
+def get_feature_names(ct):
+    names = []
+    for name, trans, cols in ct.transformers_:
+        if name == 'txt':
+            # we used TruncatedSVD -> 50 components
+            names += [f"svd_txt_{i}" for i in range(trans.named_steps['svd'].n_components)]
+        elif name == 'num':
+            names += cols
+        elif name == 'cat':
+            ohe = trans.named_steps['onehot']
+            categories = ohe.get_feature_names_out(cols)
+            names += list(categories)
+    return names
+
+preprocessor.fit(X_train)
+feature_names = get_feature_names(preprocessor)
+rf = pipe_rf.named_steps['model']
+X_train_trans = preprocessor.transform(X_train)
+importances = rf.feature_importances_
+fi_df = pd.DataFrame({'feature': feature_names, 'importance': importances}).sort_values('importance', ascending=False).head(30)
+display(fi_df)
+
+import joblib
+joblib.dump(pipe_rf, "furniture_sales_rf_pipeline.joblib")
+print("Saved model to furniture_sales_rf_pipeline.joblib")
+
+model = joblib.load("furniture_sales_rf_pipeline.joblib")
+sample = X_test.iloc[:3]   # sample rows
+preds = model.predict(sample)
+print(preds)
+
